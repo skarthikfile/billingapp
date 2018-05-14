@@ -28,11 +28,23 @@ class Sale_lib
 
 	public function get_register_mode_options()
 	{
-		return array(
-			'sale' => $this->CI->lang->line('sales_receipt'),
-			'sale_invoice' => $this->CI->lang->line('sales_invoice'),
-			'sale_quote' => $this->CI->lang->line('sales_quote')
-		);
+		$register_modes = array();
+		if($this->CI->config->item('invoice_enable') == '0')
+		{
+			$register_modes['sale'] = $this->CI->lang->line('sales_sale');
+		}
+		else
+		{
+			$register_modes['sale'] = $this->CI->lang->line('sales_receipt');
+			$register_modes['sale_quote'] = $this->CI->lang->line('sales_quote');
+			if($this->CI->config->item('work_order_enable') == '1')
+			{
+				$register_modes['sale_work_order'] = $this->CI->lang->line('sales_work_order');
+			}
+			$register_modes['sale_invoice'] = $this->CI->lang->line('sales_invoice');
+		}
+		$register_modes['return'] = $this->CI->lang->line('sales_return');
+		return $register_modes;
 	}
 
 	public function get_cart()
@@ -56,7 +68,7 @@ class Sale_lib
 
 		foreach($cart as $k=>$v)
 		{
-			if($v['print_option'] == '0')
+			if($v['print_option'] == PRINT_YES)
 			{
 				$filtered_cart[] = $v;
 			}
@@ -148,6 +160,16 @@ class Sale_lib
 		return $this->CI->session->userdata('sales_quote_number');
 	}
 
+	public function get_work_order_number()
+	{
+		return $this->CI->session->userdata('sales_work_order_number');
+	}
+
+	public function get_sale_type()
+	{
+		return $this->CI->session->userdata('sale_type');
+	}
+
 	public function set_invoice_number($invoice_number, $keep_custom = FALSE)
 	{
 		$current_invoice_number = $this->CI->session->userdata('sales_invoice_number');
@@ -166,6 +188,24 @@ class Sale_lib
 		}
 	}
 
+	public function set_work_order_number($work_order_number, $keep_custom = FALSE)
+	{
+		$current_work_order_number = $this->CI->session->userdata('sales_work_order_number');
+		if(!$keep_custom || empty($current_work_order_number))
+		{
+			$this->CI->session->set_userdata('sales_work_order_number', $work_order_number);
+		}
+	}
+
+	public function set_sale_type($sale_type, $keep_custom = FALSE)
+	{
+		$current_sale_type = $this->CI->session->userdata('sale_type');
+		if(!$keep_custom || empty($current_sale_type))
+		{
+			$this->CI->session->set_userdata('sale_type', $sale_type);
+		}
+	}
+
 	public function clear_invoice_number()
 	{
 		$this->CI->session->unset_userdata('sales_invoice_number');
@@ -174,6 +214,11 @@ class Sale_lib
 	public function clear_quote_number()
 	{
 		$this->CI->session->unset_userdata('sales_quote_number');
+	}
+
+	public function clear_sale_type()
+	{
+		$this->CI->session->unset_userdata('sale_type');
 	}
 
 	public function set_suspended_id($suspended_id)
@@ -204,15 +249,35 @@ class Sale_lib
 		return ($this->CI->session->userdata('sales_mode') == 'sale_quote');
 	}
 
+	public function is_return_mode()
+	{
+		return ($this->CI->session->userdata('sales_mode') == 'return');
+	}
+
+	public function is_work_order_mode()
+	{
+		return ($this->CI->session->userdata('sales_mode') == 'sale_work_order');
+	}
+
 	public function set_invoice_number_enabled($invoice_number_enabled)
 	{
 		return $this->CI->session->set_userdata('sales_invoice_number_enabled', $invoice_number_enabled);
 	}
 
-	public function is_print_after_sale()
+	public function get_invoice_number_enabled()
 	{
-		return ($this->CI->session->userdata('sales_print_after_sale') == 'true' ||
-				$this->CI->session->userdata('sales_print_after_sale') == '1');
+		return $this->CI->session->userdata('sales_invoice_number_enabled');
+	}
+
+	public function set_price_work_orders($price_work_orders)
+	{
+		return $this->CI->session->set_userdata('sales_price_work_orders', $price_work_orders);
+	}
+
+	public function is_price_work_orders()
+	{
+		return ($this->CI->session->userdata('sales_price_work_orders') == 'true' ||
+				$this->CI->session->userdata('sales_price_work_orders') == '1');
 	}
 
 	public function set_print_after_sale($print_after_sale)
@@ -220,9 +285,21 @@ class Sale_lib
 		return $this->CI->session->set_userdata('sales_print_after_sale', $print_after_sale);
 	}
 
-	public function get_email_receipt()
+	public function is_print_after_sale()
 	{
-		return $this->CI->session->userdata('sales_email_receipt');
+		if($this->CI->config->item('print_receipt_check_behaviour') == 'always')
+		{
+			return TRUE;
+		}
+		elseif($this->CI->config->item('print_receipt_check_behaviour') == 'never')
+		{
+			return FALSE;
+		}
+		else // remember last setting, session based though
+		{
+			return ($this->CI->session->userdata('sales_print_after_sale') == 'true' ||
+					$this->CI->session->userdata('sales_print_after_sale') == '1');
+		}
 	}
 
 	public function set_email_receipt($email_receipt)
@@ -233,6 +310,23 @@ class Sale_lib
 	public function clear_email_receipt()
 	{
 		$this->CI->session->unset_userdata('sales_email_receipt');
+	}
+
+	public function is_email_receipt()
+	{
+		if($this->CI->config->item('email_receipt_check_behaviour') == 'always')
+		{
+			return TRUE;
+		}
+		elseif($this->CI->config->item('email_receipt_check_behaviour') == 'never')
+		{
+			return FALSE;
+		}
+		else // remember last setting, session based though
+		{
+			return ($this->CI->session->userdata('sales_email_receipt') == 'true' ||
+					$this->CI->session->userdata('sales_email_receipt') == '1');
+		}
 	}
 
 	// Multiple Payments
@@ -321,7 +415,7 @@ class Sale_lib
 
 	/**
 	 * Returns 'subtotal', 'total', 'cash_total', 'payment_total', 'amount_due', 'cash_amount_due', 'paid_in_full'
-	 * 'subtotal', 'discounted_subtotal', 'tax_exclusive_subtotal'
+	 * 'subtotal', 'discounted_subtotal', 'tax_exclusive_subtotal', 'item_count', 'total_units'
 	 */
 	public function get_totals()
 	{
@@ -333,9 +427,16 @@ class Sale_lib
 		$subtotal = 0;
 		$total = 0;
 		$total_discount = 0;
+		$item_count = 0;
+		$total_units = 0;
 
 		foreach($this->get_cart() as $item)
 		{
+			if($item['stock_type'] == HAS_STOCK)
+			{
+				$item_count++;
+				$total_units += $item['quantity'];
+			}
 			$discount_amount = $this->get_item_discount($item['quantity'], $item['price'], $item['discount']);
 			$total_discount = bcadd($total_discount, $discount_amount);
 
@@ -380,7 +481,6 @@ class Sale_lib
 		{
 			$cash_total = $total;
 			$totals['cash_total'] = $cash_total;
-
 		}
 
 		$payment_total = $this->get_payments_total();
@@ -413,6 +513,9 @@ class Sale_lib
 			$totals['payments_cover_total'] = $current_due < $threshold;
 		}
 
+		$totals['item_count'] = $item_count;
+		$totals['total_units'] = $total_units;
+
 		return $totals;
 	}
 
@@ -425,7 +528,7 @@ class Sale_lib
 		$sales_total = $this->get_total();
 		$amount_due = bcsub($sales_total, $payment_total);
 		$precision = totals_decimals();
-		$rounded_due = bccomp(round($amount_due, $precision, PHP_ROUND_HALF_EVEN), 0, $precision);
+		$rounded_due = bccomp(round($amount_due, $precision, PHP_ROUND_HALF_UP), 0, $precision);
 		// take care of rounding error introduced by round tripping payment amount to the browser
 		return $rounded_due == 0 ? 0 : $amount_due;
 	}
@@ -580,7 +683,7 @@ class Sale_lib
 		$this->CI->session->unset_userdata('sales_rewards_remainder');
 	}
 
-	public function add_item(&$item_id, $quantity = 1, $item_location, $discount = 0, $price = NULL, $description = NULL, $serialnumber = NULL, $include_deleted = FALSE, $print_option = '0', $stock_type = HAS_STOCK)
+	public function add_item(&$item_id, $quantity = 1, $item_location, $discount = 0, $price_mode = PRICE_MODE_STANDARD, $kit_price_option = NULL, $kit_print_option = NULL, $price_override = NULL, $description = NULL, $serialnumber = NULL, $include_deleted = FALSE, $print_option = NULL )
 	{
 		$item_info = $this->CI->Item->get_info_by_id_or_number($item_id);
 
@@ -592,6 +695,52 @@ class Sale_lib
 		}
 
 		$item_id = $item_info->item_id;
+		$item_type = $item_info->item_type;
+		$stock_type = $item_info->stock_type;
+
+		if($price_mode == PRICE_MODE_STANDARD)
+		{
+			$price = $item_info->unit_price;
+			$cost_price = $item_info->cost_price;
+		}
+		elseif($price_mode == PRICE_MODE_KIT)
+		{
+			if($kit_price_option == PRICE_OPTION_ALL)
+			{
+				$price = $item_info->unit_price;
+				$cost_price = $item_info->cost_price;
+			}
+			elseif($kit_price_option == PRICE_OPTION_KIT  && $item_type == ITEM_KIT)
+			{
+				$price = $item_info->unit_price;
+				$cost_price = $item_info->cost_price;
+			}
+			elseif($kit_price_option == PRICE_OPTION_KIT_STOCK && $stock_type == HAS_STOCK)
+			{
+				$price = $item_info->unit_price;
+				$cost_price = $item_info->cost_price;
+			}
+			else
+			{
+				$price = 0.00;
+				$cost_price = 0.00;
+			}
+		}
+		else
+		{
+			$price= 0.00;
+			$cost_price = 0.00;
+		}
+
+		if($price_override != NULL)
+		{
+			$price = $price_override;
+		}
+
+		if($price == 0.00)
+		{
+			$discount = 0.00;
+		}
 
 		// Serialization and Description
 
@@ -632,21 +781,35 @@ class Sale_lib
 		$insertkey = $maxkey + 1;
 		//array/cart records are identified by $insertkey and item_id is just another field.
 
-		if(is_null($price))
+		if($price_mode == PRICE_MODE_KIT)
 		{
-			$price = $item_info->unit_price;
+			if($kit_print_option == PRINT_ALL)
+			{
+				$print_option_selected = PRINT_YES;
+			}
+			elseif($kit_print_option == PRINT_KIT && $item_type == ITEM_KIT)
+			{
+				$print_option_selected = PRINT_YES;
+			}
+			elseif($kit_print_option == PRINT_PRICED && $price > 0)
+			{
+				$print_option_selected = PRINT_YES;
+			}
+			else
+			{
+				$print_option_selected = PRINT_NO;
+			}
 		}
-		elseif($price == 0)
+		else
 		{
-			$price = 0.00;
-			$discount = 0.00;
-		}
-
-		// For print purposes this simpifies line selection
-		// 0 will print, 2 will not print.   The decision about 1 is made here
-		if($print_option == PRINT_PRICED)
-		{
-			$print_option = ($price == 0) ? PRINT_KIT : PRINT_ALL;
+			if($print_option != NULL)
+			{
+				$print_option_selected = $print_option;
+			}
+			else
+			{
+				$print_option_selected = PRINT_YES;
+			}
 		}
 
 		$total = $this->get_item_total($quantity, $price, $discount);
@@ -669,10 +832,12 @@ class Sale_lib
 					'discount' => $discount,
 					'in_stock' => $this->CI->Item_quantity->get_item_quantity($item_id, $item_location)->quantity,
 					'price' => $price,
+					'cost_price' => $cost_price,
 					'total' => $total,
 					'discounted_total' => $discounted_total,
-					'print_option' => $print_option,
+					'print_option' => $print_option_selected,
 					'stock_type' => $stock_type,
+					'item_type' => $item_type,
 					'tax_category_id' => $item_info->tax_category_id
 				)
 			);
@@ -748,12 +913,17 @@ class Sale_lib
 		return -1;
 	}
 
-	public function edit_item($line, $description, $serialnumber, $quantity, $discount, $price)
+	public function edit_item($line, $description, $serialnumber, $quantity, $discount, $price, $discounted_total=NULL)
 	{
 		$items = $this->get_cart();
 		if(isset($items[$line]))
 		{
 			$line = &$items[$line];
+			if($discounted_total != NULL && $discounted_total != $line['discounted_total'])
+			{
+				// Note when entered the "discounted_total" is expected to be entered without a discount
+				$quantity = $this->get_quantity_sold($discounted_total, $price);
+			}
 			$line['description'] = $description;
 			$line['serialnumber'] = $serialnumber;
 			$line['quantity'] = $quantity;
@@ -785,13 +955,13 @@ class Sale_lib
 
 		foreach($this->CI->Sale->get_sale_items_ordered($sale_id)->result() as $row)
 		{
-			$this->add_item($row->item_id, -$row->quantity_purchased, $row->item_location, $row->discount_percent, $row->item_unit_price, $row->description, $row->serialnumber, TRUE, $row->print_option, $row->print_option);
+			$this->add_item($row->item_id, -$row->quantity_purchased, $row->item_location, $row->discount_percent, PRICE_MODE_STANDARD, NULL, NULL, $row->item_unit_price, $row->description, $row->serialnumber, TRUE);
 		}
 
 		$this->set_customer($this->CI->Sale->get_customer($sale_id)->person_id);
 	}
 
-	public function add_item_kit($external_item_kit_id, $item_location, $discount, $price_option, $kit_print_option, &$stock_warning)
+	public function add_item_kit($external_item_kit_id, $item_location, $discount, $kit_price_option, $kit_print_option, &$stock_warning)
 	{
 		//KIT #
 		$pieces = explode(' ', $external_item_kit_id);
@@ -800,42 +970,9 @@ class Sale_lib
 
 		foreach($this->CI->Item_kit_items->get_info($item_kit_id) as $item_kit_item)
 		{
-			if($price_option == PRICE_ALL) // all
-			{
-				$price = null;
-			}
-			elseif($price_option == PRICE_KIT) // item kit only
-			{
-				$price = 0;
-			}
-			elseif($price_option == PRICE_KIT_ITEMS) // item kit plus stock items (assuming materials)
-			{
-				if($item_kit_item['stock_type'] == ITEM) // stock item
-				{
-					$price = null;
-				}
-				else
-				{
-					$price = 0;
-				}
-			}
+			$result &= $this->add_item($item_kit_item['item_id'], $item_kit_item['quantity'], $item_location, $discount, PRICE_MODE_KIT, $kit_price_option, $kit_print_option, NULL, NULL, NULL, NULL);
 
-			if($kit_print_option == PRINT_ALL)
-			{
-				$print_option = PRINT_ALL;
-			}
-			elseif($kit_print_option == PRINT_PRICED) // priced
-			{
-				$print_option = PRINT_PRICED; // print if price not zero
-			}
-			elseif($kit_print_option == PRINT_KIT) // kit only if price is not zero
-			{
-				$print_option = PRINT_KIT; // Do not include in list
-			}
-
-			$result &= $this->add_item($item_kit_item['item_id'], $item_kit_item['quantity'], $item_location, $discount, $price, null, null, null, $print_option, $item_kit_item['stock_type']);
-
-			if($stock_warning == null)
+			if($stock_warning == NULL)
 			{
 				$stock_warning = $this->out_of_stock($item_kit_item['item_id'], $item_location);
 			}
@@ -851,7 +988,7 @@ class Sale_lib
 
 		foreach($this->CI->Sale->get_sale_items_ordered($sale_id)->result() as $row)
 		{
-			$this->add_item($row->item_id, $row->quantity_purchased, $row->item_location, $row->discount_percent, $row->item_unit_price, $row->description, $row->serialnumber, TRUE, $row->print_option);
+			$this->add_item($row->item_id, $row->quantity_purchased, $row->item_location, $row->discount_percent, PRICE_MODE_STANDARD, NULL, NULL, $row->item_unit_price, $row->description, $row->serialnumber, TRUE, $row->print_option);
 		}
 
 		foreach($this->CI->Sale->get_sale_payments($sale_id)->result() as $row)
@@ -862,8 +999,16 @@ class Sale_lib
 		$this->set_customer($this->CI->Sale->get_customer($sale_id)->person_id);
 		$this->set_employee($this->CI->Sale->get_employee($sale_id)->person_id);
 		$this->set_quote_number($this->CI->Sale->get_quote_number($sale_id));
+		$this->set_work_order_number($this->CI->Sale->get_work_order_number($sale_id));
+		$this->set_sale_type($this->CI->Sale->get_sale_type($sale_id));
 		$this->set_comment($this->CI->Sale->get_comment($sale_id));
 		$this->set_dinner_table($this->CI->Sale->get_dinner_table($sale_id));
+		$this->CI->session->set_userdata('sale_id', $sale_id);
+	}
+
+	public function get_sale_id()
+	{
+		return $this->CI->session->userdata('sale_id');
 	}
 
 	public function get_cart_reordered($sale_id)
@@ -871,8 +1016,7 @@ class Sale_lib
 		$this->empty_cart();
 		foreach($this->CI->Sale->get_sale_items_ordered($sale_id)->result() as $row)
 		{
-			$this->add_item($row->item_id, $row->quantity_purchased, $row->item_location, $row->discount_percent, $row->item_unit_price,
-				$row->description, $row->serialnumber, TRUE, $row->print_option, $row->stock_type);
+			$this->add_item($row->item_id, $row->quantity_purchased, $row->item_location, $row->discount_percent, PRICE_MODE_STANDARD, NULL, NULL, $row->item_unit_price, $row->description, $row->serialnumber, TRUE, $row->print_option);
 		}
 
 		return $this->CI->session->userdata('sales_cart');
@@ -880,6 +1024,7 @@ class Sale_lib
 
 	public function clear_all()
 	{
+		$this->CI->session->set_userdata('sale_id', -1);
 		$this->set_invoice_number_enabled(FALSE);
 		$this->clear_table();
 		$this->empty_cart();
@@ -887,6 +1032,7 @@ class Sale_lib
 		$this->clear_email_receipt();
 		$this->clear_invoice_number();
 		$this->clear_quote_number();
+		$this->clear_sale_type();
 		$this->clear_giftcard_remainder();
 		$this->empty_payments();
 		$this->remove_customer();
@@ -902,7 +1048,7 @@ class Sale_lib
 
 	public function reset_cash_flags()
 	{
-		if($this->CI->lang->line('payment_options_order') != 'cashdebitcredit')
+		if($this->CI->config->item('payment_options_order') != 'cashdebitcredit')
 		{
 			$cash_mode = 1;
 		}
@@ -1076,6 +1222,20 @@ class Sale_lib
 		return $total;
 	}
 
+	/**
+	 * Derive the quantity sold based on the new total entered, returning the quanitity rounded to the
+	 * appropriate decimal positions.
+	 * @param $total
+	 * @param $price
+	 * @return string
+	 */
+	public function get_quantity_sold($total, $price)
+	{
+		$quantity = bcdiv($total, $price, quantity_decimals());
+
+		return $quantity;
+	}
+
 	public function get_extended_amount($quantity, $price, $discount_amount = 0)
 	{
 		$extended_amount = bcmul($quantity, $price);
@@ -1088,7 +1248,7 @@ class Sale_lib
 		$total = bcmul($quantity, $price);
 		$discount_fraction = bcdiv($discount_percentage, 100);
 
-		return bcmul($total, $discount_fraction);
+		return round(bcmul($total, $discount_fraction), totals_decimals(), PHP_ROUND_HALF_UP);
 	}
 
 	public function get_item_tax($quantity, $price, $discount_percentage, $tax_percentage)
@@ -1131,9 +1291,12 @@ class Sale_lib
 
 		$cash_rounding = $this->CI->session->userdata('cash_rounding');
 
-		foreach($this->get_taxes() as $sales_tax)
+		if(!$this->CI->config->item('tax_included'))
 		{
-			$total = bcadd($total, $sales_tax['sale_tax_amount']);
+			foreach($this->get_taxes() as $sales_tax)
+			{
+				$total = bcadd($total, $sales_tax['sale_tax_amount']);
+			}
 		}
 
 		if($cash_rounding)
@@ -1144,10 +1307,10 @@ class Sale_lib
 		return $total;
 	}
 
-    public function get_empty_tables()
-    {
-    	return $this->CI->Dinner_table->get_empty_tables();
-    }
+	public function get_empty_tables()
+	{
+		return $this->CI->Dinner_table->get_empty_tables();
+	}
 
 	public function check_for_cash_rounding($total)
 	{

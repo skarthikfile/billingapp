@@ -15,7 +15,8 @@ class Specific_customer extends Report
 		return array(
 			'summary' => array(
 				array('id' => $this->lang->line('reports_sale_id')),
-				array('sale_date' => $this->lang->line('reports_date')),
+				array('type_code' => $this->lang->line('reports_code_type')),
+				array('sale_date' => $this->lang->line('reports_date'), 'sortable' => FALSE),
 				array('quantity' => $this->lang->line('reports_quantity')),
 				array('employee_name' => $this->lang->line('reports_sold_by')),
 				array('subtotal' => $this->lang->line('reports_subtotal'), 'sorter' => 'number_sorter'),
@@ -23,7 +24,7 @@ class Specific_customer extends Report
 				array('total' => $this->lang->line('reports_total'), 'sorter' => 'number_sorter'),
 				array('cost' => $this->lang->line('reports_cost'), 'sorter' => 'number_sorter'),
 				array('profit' => $this->lang->line('reports_profit'), 'sorter' => 'number_sorter'),
-				array('payment_type' => $this->lang->line('reports_payment_type')),
+				array('payment_type' => $this->lang->line('reports_payment_type'), 'sortable' => FALSE),
 				array('comment' => $this->lang->line('reports_comments'))),
 			'details' => array(
 				$this->lang->line('reports_name'),
@@ -46,6 +47,15 @@ class Specific_customer extends Report
 	public function getData(array $inputs)
 	{
 		$this->db->select('sale_id,
+			MAX(CASE
+			WHEN sale_type = ' . SALE_TYPE_INVOICE . ' && sale_status = ' . COMPLETED . ' THEN \'' . $this->lang->line('reports_code_invoice') . '\'
+			WHEN sale_type = ' . SALE_TYPE_WORK_ORDER . ' && sale_status = ' . SUSPENDED . ' THEN \'' . $this->lang->line('reports_code_work_order') . '\'
+			WHEN sale_type = ' . SALE_TYPE_QUOTE . ' && sale_status = ' . SUSPENDED . ' THEN \'' . $this->lang->line('reports_code_quote') . '\'
+			WHEN sale_type = ' . SALE_TYPE_RETURN . ' && sale_status = ' . COMPLETED . ' THEN \'' . $this->lang->line('reports_code_return') . '\'
+			WHEN sale_status = ' . CANCELED . ' THEN \'' . $this->lang->line('reports_code_canceled') . '\'
+			ELSE \'\'
+			END) AS type_code,
+			MAX(sale_status) as sale_status,
 			MAX(sale_date) AS sale_date,
 			SUM(quantity_purchased) AS items_purchased,
 			MAX(employee_name) AS employee_name,
@@ -57,23 +67,54 @@ class Specific_customer extends Report
 			MAX(payment_type) AS payment_type,
 			MAX(comment) AS comment');
 		$this->db->from('sales_items_temp');
-		$this->db->where('customer_id', $inputs['customer_id']);
+		$this->db->where('customer_id', $inputs['customer_id']);  
+		
+		if($inputs['payment_type'] == 'invoices')
+		{
+			$this->db->where('sale_type', SALE_TYPE_INVOICE);
+		}	
+		elseif ($inputs['payment_type'] != 'all') 
+		{
+			$this->db->like('payment_type', $this->lang->line('sales_'.$inputs['payment_type']));
+		}	
 
-		if($inputs['sale_type'] == 'sales')
+		
+		if($inputs['sale_type'] == 'complete')
 		{
-			$this->db->where('sale_status = ' . COMPLETED . ' and quantity_purchased > 0');
+			$this->db->where('sale_status', COMPLETED);
+			$this->db->group_start();
+			$this->db->where('sale_type', SALE_TYPE_POS);
+			$this->db->or_where('sale_type', SALE_TYPE_INVOICE);
+			$this->db->or_where('sale_type', SALE_TYPE_RETURN);			
+			$this->db->group_end();
 		}
-		elseif($inputs['sale_type'] == 'all')
+		elseif($inputs['sale_type'] == 'sales')
 		{
-			$this->db->where('sale_status = ' . COMPLETED);
+			$this->db->where('sale_status', COMPLETED);
+			$this->db->group_start();
+			$this->db->where('sale_type', SALE_TYPE_POS);
+			$this->db->or_where('sale_type', SALE_TYPE_INVOICE);
+			
+			$this->db->group_end();
 		}
 		elseif($inputs['sale_type'] == 'quotes')
 		{
-			$this->db->where('sale_status = ' . SUSPENDED . ' and quote_number IS NOT NULL');
+			$this->db->where('sale_status', SUSPENDED);
+			$this->db->where('sale_type', SALE_TYPE_QUOTE);
+		}
+		elseif($inputs['sale_type'] == 'work_orders')
+		{
+			$this->db->where('sale_status', SUSPENDED);
+			$this->db->where('sale_type', SALE_TYPE_WORK_ORDER);
+		}
+		elseif($inputs['sale_type'] == 'canceled')
+		{
+			$this->db->where('sale_status', CANCELED);
 		}
 		elseif($inputs['sale_type'] == 'returns')
 		{
-			$this->db->where('sale_status = ' . COMPLETED . ' and quantity_purchased < 0');
+			$this->db->where('sale_status', COMPLETED);
+			$this->db->where('sale_type', SALE_TYPE_RETURN);
 		}
 
 		$this->db->group_by('sale_id');
@@ -104,23 +145,52 @@ class Specific_customer extends Report
 		$this->db->select('SUM(subtotal) AS subtotal, SUM(tax) AS tax, SUM(total) AS total, SUM(cost) AS cost, SUM(profit) AS profit');
 		$this->db->from('sales_items_temp');
 		$this->db->where('customer_id', $inputs['customer_id']);
-
-		if($inputs['sale_type'] == 'sales')
+		
+		if($inputs['payment_type'] == 'invoices')
 		{
-			$this->db->where('sale_status = ' . COMPLETED . ' and quantity_purchased > 0');
+			$this->db->where('sale_type', SALE_TYPE_INVOICE);
+		}	
+		elseif ($inputs['payment_type'] != 'all') 
+		{
+			$this->db->like('payment_type', $this->lang->line('sales_'.$inputs['payment_type']));
+		}	
+		
+		if($inputs['sale_type'] == 'complete')
+		{
+			$this->db->where('sale_status', COMPLETED);
+			$this->db->group_start();
+			$this->db->where('sale_type', SALE_TYPE_POS);
+			$this->db->or_where('sale_type', SALE_TYPE_INVOICE);
+			$this->db->or_where('sale_type', SALE_TYPE_RETURN);
+			$this->db->group_end();
 		}
-		elseif($inputs['sale_type'] == 'all')
+		elseif($inputs['sale_type'] == 'sales')
 		{
-			$this->db->where('sale_status = ' . COMPLETED);
+			$this->db->where('sale_status', COMPLETED);
+			$this->db->group_start();
+			$this->db->where('sale_type', SALE_TYPE_POS);
+			$this->db->or_where('sale_type', SALE_TYPE_INVOICE);
+			$this->db->group_end();
 		}
 		elseif($inputs['sale_type'] == 'quotes')
 		{
-			$this->db->where('sale_status = ' . SUSPENDED . ' and quote_number IS NOT NULL');
+			$this->db->where('sale_status', SUSPENDED);
+			$this->db->where('sale_type', SALE_TYPE_QUOTE);
+		}
+		elseif($inputs['sale_type'] == 'work_orders')
+		{
+			$this->db->where('sale_status', SUSPENDED);
+			$this->db->where('sale_type', SALE_TYPE_WORK_ORDER);
+		}
+		elseif($inputs['sale_type'] == 'canceled')
+		{
+			$this->db->where('sale_status', CANCELED);
 		}
 		elseif($inputs['sale_type'] == 'returns')
 		{
-			$this->db->where('sale_status = ' . COMPLETED . ' and quantity_purchased < 0');
-		}
+			$this->db->where('sale_status', COMPLETED);
+			$this->db->where('sale_type', SALE_TYPE_RETURN);
+		}		
 
 		return $this->db->get()->row_array();
 	}

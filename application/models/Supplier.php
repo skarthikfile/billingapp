@@ -230,29 +230,21 @@ class Supplier extends Person
 	*/
 	public function get_found_rows($search)
 	{
-		$this->db->from('suppliers');
-		$this->db->join('people', 'suppliers.person_id = people.person_id');
-		$this->db->group_start();
-			$this->db->like('first_name', $search);
-			$this->db->or_like('last_name', $search);
-			$this->db->or_like('company_name', $search);
-			$this->db->or_like('agency_name', $search);
-			$this->db->or_like('email', $search);
-			$this->db->or_like('phone_number', $search);
-			$this->db->or_like('account_number', $search);
-			$this->db->or_like('CONCAT(first_name, " ", last_name)', $search);
-		$this->db->group_end();
-		$this->db->where('deleted', 0);
-
-		return $this->db->get()->num_rows();
+		return $this->search($search, 0, 0, 'last_name', 'asc', TRUE);
 	}
 	
 	/*
 	Perform a search on suppliers
 	*/
-	public function search($search, $rows = 0, $limit_from = 0, $sort = 'last_name', $order = 'asc')
+	public function search($search, $rows = 0, $limit_from = 0, $sort = 'last_name', $order = 'asc', $count_only = FALSE)
 	{
-		$this->db->from('suppliers');
+		// get_found_rows case
+		if($count_only == TRUE)
+		{
+			$this->db->select('COUNT(suppliers.person_id) as count');
+		}
+
+		$this->db->from('suppliers AS suppliers');
 		$this->db->join('people', 'suppliers.person_id = people.person_id');
 		$this->db->group_start();
 			$this->db->like('first_name', $search);
@@ -266,6 +258,12 @@ class Supplier extends Person
 		$this->db->group_end();
 		$this->db->where('deleted', 0);
 		
+		// get_found_rows case
+		if($count_only == TRUE)
+		{
+			return $this->db->get()->row()->count;
+		}
+
 		$this->db->order_by($sort, $order);
 
 		if($rows > 0)

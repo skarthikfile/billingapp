@@ -68,6 +68,34 @@
 						</div>
 					</div>
 				</div>
+
+				<div class="form-group form-group-sm">
+					<?php echo form_label($this->lang->line('employees_language'), 'language', array('class' => 'control-label col-xs-3')); ?>
+					<div class='col-xs-8'>
+						<div class="input-group">
+							<?php 
+								$languages = get_languages();
+								$languages[':'] = $this->lang->line('employees_system_language');
+								$language_code = current_language_code();
+								$language = current_language();
+								
+								// If No language is set then it will display "System Language"
+								if($language_code === current_language_code(TRUE))
+								{
+									$language_code = '';
+									$language = '';
+								}
+								
+								echo form_dropdown(
+									'language',
+									$languages,
+									$language_code . ':' . $language,
+									array('class' => 'form-control input-sm')
+									);
+							?>
+						</div>
+					</div>
+				</div>
 			</fieldset>
 		</div>
 
@@ -81,7 +109,12 @@
 					{
 					?>
 						<li>	
-							<?php echo form_checkbox("grants[]", $module->module_id, $module->grant, "class='module'"); ?>
+							<?php echo form_checkbox("grant_".$module->module_id, $module->module_id, $module->grant, "class='module'"); ?>
+							<?php echo form_dropdown("menu_group_".$module->module_id, array(
+								'home' => $this->lang->line('module_home'),
+								'office' => $this->lang->line('module_office'),
+								'both' => $this->lang->line('module_both')
+							), $module->menu_group, "class='module'"); ?>
 							<span class="medium"><?php echo $this->lang->line('module_'.$module->module_id);?>:</span>
 							<span class="small"><?php echo $this->lang->line('module_'.$module->module_id.'_desc');?></span>
 							<?php
@@ -98,7 +131,8 @@
 							?>
 											<ul>
 												<li>
-													<?php echo form_checkbox("grants[]", $permission->permission_id, $permission->grant); ?>
+													<?php echo form_checkbox("grant_".$permission->permission_id, $permission->permission_id, $permission->grant); ?>
+													<?php echo form_hidden("menu_group_".$permission->permission_id, "--"); ?>
 													<span class="medium"><?php echo $lang_line ?></span>
 												</li>
 											</ul>
@@ -137,22 +171,22 @@ $(document).ready(function()
 		return result;
 	}, '<?php echo $this->lang->line('employees_subpermission_required'); ?>');
 
-	$("ul#permission_list > li > input[name='grants[]']").each(function() 
+	$("ul#permission_list > li > input.module").each(function()
 	{
-	    var $this = $(this);
-	    $("ul > li > input", $this.parent()).each(function() 
-	    {
-		    var $that = $(this);
-	        var updateCheckboxes = function (checked) 
-	        {
+		var $this = $(this);
+		$("ul > li > input,select", $this.parent()).each(function()
+		{
+			var $that = $(this);
+			var updateInputs = function (checked)
+			{
 				$that.prop("disabled", !checked);
-	         	!checked && $that.prop("checked", false);
-	        }
-	       $this.change(function() {
-	            updateCheckboxes($this.is(":checked"));
-	        });
-			updateCheckboxes($this.is(":checked"));
-	    });
+				!checked && $that.prop("checked", false);
+			}
+			$this.change(function() {
+				updateInputs($this.is(":checked"));
+			});
+			updateInputs($this.is(":checked"));
+		});
 	});
 	
 	$('#employee_form').validate($.extend({
@@ -191,20 +225,20 @@ $(document).ready(function()
 			},	
 			repeat_password:
 			{
- 				equalTo: "#password"
+				equalTo: "#password"
 			},
-    		email: "email"
-   		},
+			email: "email"
+		},
 		messages: 
 		{
-     		first_name: "<?php echo $this->lang->line('common_first_name_required'); ?>",
-     		last_name: "<?php echo $this->lang->line('common_last_name_required'); ?>",
-     		username:
-     		{
-     			required: "<?php echo $this->lang->line('employees_username_required'); ?>",
-     			minlength: "<?php echo $this->lang->line('employees_username_minlength'); ?>"
-     		},
-     		
+			first_name: "<?php echo $this->lang->line('common_first_name_required'); ?>",
+			last_name: "<?php echo $this->lang->line('common_last_name_required'); ?>",
+			username:
+			{
+				required: "<?php echo $this->lang->line('employees_username_required'); ?>",
+				minlength: "<?php echo $this->lang->line('employees_username_minlength'); ?>"
+			},
+
 			password:
 			{
 				<?php
@@ -220,8 +254,8 @@ $(document).ready(function()
 			repeat_password:
 			{
 				equalTo: "<?php echo $this->lang->line('employees_password_must_match'); ?>"
-     		},
-     		email: "<?php echo $this->lang->line('common_email_invalid_format'); ?>"
+			},
+			email: "<?php echo $this->lang->line('common_email_invalid_format'); ?>"
 		}
 	}, form_support.error));
 });

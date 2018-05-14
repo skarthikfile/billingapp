@@ -16,10 +16,12 @@ class Rounding_mode
 		$CI->load->helper('language');
 		$class = new ReflectionClass(__CLASS__);
 		$result = array();
+
 		foreach($class->getConstants() as $key => $value)
 		{
 			$result[$value] = lang(strtolower('ENUM_'. $key));
 		}
+
 		return $result;
 	}
 
@@ -28,7 +30,7 @@ class Rounding_mode
 		$CI =& get_instance();
 		$CI->load->helper('language');
 
-		if (empty($code))
+		if(empty($code))
 		{
 			return lang('common_unknown');
 		}
@@ -41,10 +43,12 @@ class Rounding_mode
 		$CI =& get_instance();
 		$CI->load->helper('language');
 		$x = '';
-		foreach (Rounding_mode::get_rounding_options() as $option => $label)
+
+		foreach(Rounding_mode::get_rounding_options() as $option => $label)
 		{
 			$x .= "<option value='$option'>".$label."</option>";
 		}
+
 		return $x;
 	}
 
@@ -52,13 +56,13 @@ class Rounding_mode
 	{
 		if($rounding_mode == Rounding_mode::ROUND_UP)
 		{
-			$fig = (int) str_pad('1', $decimals, '0');
-			$rounded_total = (ceil($amount * $fig) / $fig);
+			$fig = pow(10,$decimals);
+			$rounded_total = (ceil($fig*$amount) + ceil($fig*$amount - ceil($fig*$amount)))/$fig;
 		}
 		elseif($rounding_mode == Rounding_mode::ROUND_DOWN)
 		{
-			$fig = (int) str_pad('1', $decimals, '0');
-			$rounded_total = (floor($amount * $fig) / $fig);
+			$fig = pow(10,$decimals);
+			$rounded_total = (floor($fig*$amount) + floor($fig*$amount - floor($fig*$amount)))/$fig;
 		}
 		elseif($rounding_mode == Rounding_mode::HALF_FIVE)
 		{

@@ -119,9 +119,11 @@ class Employee extends Person
 				//Now insert the new grants
 				if($success)
 				{
-					foreach($grants_data as $permission_id)
+					$count = 0;
+					foreach($grants_data as $grant)
 					{
-						$success = $this->db->insert('grants', array('permission_id' => $permission_id, 'person_id' => $employee_id));
+						$success = $this->db->insert('grants', array('permission_id' => $grant['permission_id'], 'person_id' => $employee_id, 'menu_group' => $grant['menu_group']));
+						$count = $count+ 1;
 					}
 				}
 			}
@@ -257,27 +259,21 @@ class Employee extends Person
 	*/
 	public function get_found_rows($search)
 	{
-		$this->db->from('employees');
-		$this->db->join('people', 'employees.person_id = people.person_id');
-		$this->db->group_start();
-			$this->db->like('first_name', $search);
-			$this->db->or_like('last_name', $search);
-			$this->db->or_like('email', $search);
-			$this->db->or_like('phone_number', $search);
-			$this->db->or_like('username', $search);
-			$this->db->or_like('CONCAT(first_name, " ", last_name)', $search);
-		$this->db->group_end();
-		$this->db->where('deleted', 0);
-
-		return $this->db->get()->num_rows();
+		return $this->search($search, 0, 0, 'last_name', 'asc', TRUE);
 	}
 
 	/*
 	Performs a search on employees
 	*/
-	public function search($search, $rows = 0, $limit_from = 0, $sort = 'last_name', $order = 'asc')
+	public function search($search, $rows = 0, $limit_from = 0, $sort = 'last_name', $order = 'asc', $count_only = FALSE)
 	{
-		$this->db->from('employees');
+		// get_found_rows case
+		if($count_only == TRUE)
+		{
+			$this->db->select('COUNT(employees.person_id) as count');
+		}
+
+		$this->db->from('employees AS employees');
 		$this->db->join('people', 'employees.person_id = people.person_id');
 		$this->db->group_start();
 			$this->db->like('first_name', $search);
@@ -288,6 +284,13 @@ class Employee extends Person
 			$this->db->or_like('CONCAT(first_name, " ", last_name)', $search);
 		$this->db->group_end();
 		$this->db->where('deleted', 0);
+
+		// get_found_rows case
+		if($count_only == TRUE)
+		{
+			return $this->db->get()->row()->count;
+		}
+
 		$this->db->order_by($sort, $order);
 
 		if($rows > 0)
@@ -390,9 +393,9 @@ class Employee extends Person
 		return ($this->db->get()->num_rows() == 0);
 	}
 
-	/*
-	Determines whether the employee specified employee has access the specific module.
-	*/
+	/**
+	 * Determines whether the employee specified employee has access the specific module.
+	 */
 	public function has_grant($permission_id, $person_id)
 	{
 		//if no module_id is null, allow access
@@ -406,9 +409,32 @@ class Employee extends Person
 		return ($query->num_rows() == 1);
 	}
 
- 	/*
-	Gets employee permission grants
-	*/
+	/**
+	 * Returns the menu group designation that this module is to appear in
+	 */
+	public function get_menu_group($permission_id, $person_id)
+	{
+		$this->db->select('menu_group');
+		$this->db->from('grants');
+		$this->db->where('permission_id', $permission_id);
+		$this->db->where('person_id', $person_id);
+
+		$row = $this->db->get()->row();
+
+		// If no grants are assigned yet then set the default to 'home'
+		if($row == NULL)
+		{
+			return 'home';
+		}
+		else
+		{
+			return $row->menu_group;
+		}
+	}
+
+	/*
+   Gets employee permission grants
+   */
 	public function get_employee_grants($person_id)
 	{
 		$this->db->from('grants');

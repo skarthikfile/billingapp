@@ -206,6 +206,7 @@ class Config extends Secure_Controller
 		$data['register_mode_options'] = $this->sale_lib->get_register_mode_options();
 		$data['rounding_options'] = Rounding_mode::get_rounding_options();
 		$data['tax_codes'] = $this->get_tax_code_options();
+		$data['show_office_group'] = $this->Module->get_show_office_group();
 
 		$data = $this->xss_clean($data);
 
@@ -232,7 +233,6 @@ class Config extends Secure_Controller
 		$this->load->view("configs/manage", $data);
 	}
 
-
 	public function get_tax_code_options()
 	{
 		$tax_codes = $this->Tax->get_all_tax_codes()->result_array();
@@ -245,7 +245,6 @@ class Config extends Secure_Controller
 		}
 		return $tax_code_options;
 	}
-
 
 	public function save_info()
 	{
@@ -287,6 +286,7 @@ class Config extends Secure_Controller
 		$batch_save_data = array(
 			'theme' => $this->input->post('theme'),
 			'default_sales_discount' => $this->input->post('default_sales_discount'),
+			'enforce_privacy' => $this->input->post('enforce_privacy'),
 			'receiving_calculate_average_price' => $this->input->post('receiving_calculate_average_price') != NULL,
 			'lines_per_page' => $this->input->post('lines_per_page'),
 			'notify_horizontal_position' => $this->input->post('notify_horizontal_position'),
@@ -294,8 +294,11 @@ class Config extends Secure_Controller
 			'gcaptcha_enable' => $this->input->post('gcaptcha_enable') != NULL,
 			'gcaptcha_secret_key' => $this->input->post('gcaptcha_secret_key'),
 			'gcaptcha_site_key' => $this->input->post('gcaptcha_site_key'),
+			'suggestions_first_column' => $this->input->post('suggestions_first_column'),
+			'suggestions_second_column' => $this->input->post('suggestions_second_column'),
+			'suggestions_third_column' => $this->input->post('suggestions_third_column'),
 			'giftcard_number' => $this->input->post('giftcard_number'),
-			'statistics' => $this->input->post('statistics') != NULL,
+			'derive_sale_quantity' => $this->input->post('derive_sale_quantity') != NULL,
 			'custom1_name' => $this->input->post('custom1_name'),
 			'custom2_name' => $this->input->post('custom2_name'),
 			'custom3_name' => $this->input->post('custom3_name'),
@@ -308,6 +311,8 @@ class Config extends Secure_Controller
 			'custom10_name' => $this->input->post('custom10_name')
 		);
 
+		$this->Module->set_show_office_group($this->input->post('show_office_group') != NULL);
+
 		$result = $this->Appconfig->batch_save($batch_save_data);
 		$success = $result ? TRUE : FALSE;
 
@@ -317,7 +322,7 @@ class Config extends Secure_Controller
 		));
 	}
 
-	public function check_number_locale()
+	public function ajax_check_number_locale()
 	{
 		$number_locale = $this->input->post('number_locale');
 		$fmt = new \NumberFormatter($number_locale, \NumberFormatter::CURRENCY);
@@ -544,11 +549,13 @@ class Config extends Secure_Controller
 			if(strstr($key, 'stock_location'))
 			{
 				$location_id = preg_replace("/.*?_(\d+)$/", "$1", $key);
-				$not_to_delete[] = $location_id;
+
 				// save or update
 				$location_data = array('location_name' => $value);
 				if($this->Stock_location->save($location_data, $location_id))
 				{
+					$location_id = $this->Stock_location->get_location_id($value);
+					$not_to_delete[] = $location_id;
 					$this->_clear_session_state();
 				}
 			}
@@ -696,11 +703,11 @@ class Config extends Secure_Controller
 
 		$success &= $this->db->trans_status();
 
-		$message = "";
+		$message = '';
 		if($success && $delete_rejected)
 		{
 			$message = $this->lang->line('config_tax_category_used');
-			$success = false;
+			$success = FALSE;
 		}
 		else
 		{
@@ -776,7 +783,6 @@ class Config extends Secure_Controller
 	{
 		$batch_save_data = array(
 			'barcode_type' => $this->input->post('barcode_type'),
-			'barcode_quality' => $this->input->post('barcode_quality'),
 			'barcode_width' => $this->input->post('barcode_width'),
 			'barcode_height' => $this->input->post('barcode_height'),
 			'barcode_font' => $this->input->post('barcode_font'),
@@ -788,6 +794,7 @@ class Config extends Secure_Controller
 			'barcode_page_width' => $this->input->post('barcode_page_width'),
 			'barcode_page_cellspacing' => $this->input->post('barcode_page_cellspacing'),
 			'barcode_generate_if_empty' => $this->input->post('barcode_generate_if_empty') != NULL,
+			'allow_duplicate_barcodes' => $this->input->post('allow_duplicate_barcodes') != NULL,
 			'barcode_content' => $this->input->post('barcode_content'),
 			'barcode_formats' => json_encode($this->input->post('barcode_formats'))
 		);
@@ -806,6 +813,9 @@ class Config extends Secure_Controller
 		$batch_save_data = array (
 			'receipt_template' => $this->input->post('receipt_template'),
 			'receipt_font_size' => $this->input->post('receipt_font_size'),
+			'print_delay_autoreturn' => $this->input->post('print_delay_autoreturn'),
+			'email_receipt_check_behaviour' => $this->input->post('email_receipt_check_behaviour'),
+			'print_receipt_check_behaviour' => $this->input->post('print_receipt_check_behaviour'),
 			'receipt_show_company_name' => $this->input->post('receipt_show_company_name') != NULL,
 			'receipt_show_taxes' => $this->input->post('receipt_show_taxes') != NULL,
 			'receipt_show_total_discount' => $this->input->post('receipt_show_total_discount') != NULL,
@@ -841,7 +851,11 @@ class Config extends Secure_Controller
 			'invoice_email_message' => $this->input->post('invoice_email_message'),
 			'line_sequence' => $this->input->post('line_sequence'),
 			'last_used_invoice_number' =>$this->input->post('last_used_invoice_number'),
-			'last_used_quote_number' =>$this->input->post('last_used_quote_number')
+			'last_used_quote_number' =>$this->input->post('last_used_quote_number'),
+			'quote_default_comments' => $this->input->post('quote_default_comments'),
+			'work_order_enable' => $this->input->post('work_order_enable') != NULL,
+			'work_order_format' => $this->input->post('work_order_format'),
+			'last_used_work_order_number' =>$this->input->post('last_used_work_order_number')
 		);
 
 		$result = $this->Appconfig->batch_save($batch_save_data);
@@ -918,17 +932,16 @@ class Config extends Secure_Controller
 			// Chmod the file
 			@chmod($config_path, 0777);
 
-			// Write the new config.php file
-			$handle = fopen($config_path, 'w+');
-
 			// Verify file permissions
 			if(is_writable($config_path))
 			{
+				// Write the new config.php file
+				$handle = @fopen($config_path, 'w+');
 				// Write the file
 				$result = (fwrite($handle, $config) === FALSE) ? FALSE : TRUE;
-			}
 
-			fclose($handle);
+				fclose($handle);
+			}
 
 			// Chmod the file
 			@chmod($config_path, 0444);

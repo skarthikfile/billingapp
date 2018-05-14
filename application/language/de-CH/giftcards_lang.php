@@ -2,7 +2,6 @@
 
 $lang["giftcards_add_minus"] = "Bestandsänderung";
 $lang["giftcards_allow_alt_description"] = "Erlaube Alternative Bezeichnung";
-$lang["giftcards_amazon"] = "Amazon";
 $lang["giftcards_bulk_edit"] = "Sammeländerung";
 $lang["giftcards_cannot_be_deleted"] = "Konnte gewählte Gutscheine nicht löschen, einer oder mehrere weisen Verkäufe auf";
 $lang["giftcards_cannot_find_giftcard"] = "Konnte keinen Gutschein finden";
@@ -15,6 +14,7 @@ $lang["giftcards_change_all_to_serialized"] = "Ändere alle zu serialisiert";
 $lang["giftcards_change_all_to_unserialized"] = "Ändere alle zu NICHT serialisiert";
 $lang["giftcards_confirm_bulk_edit"] = "Wollen Sie alle gewählten Gutscheine ändern?";
 $lang["giftcards_confirm_delete"] = "Wollen Sie alle gewählten Gutscheine löschen?";
+$lang["giftcards_confirm_restore"] = "";
 $lang["giftcards_cost_price"] = "Einstandspreis";
 $lang["giftcards_count"] = "Bestandsänderung";
 $lang["giftcards_current_quantity"] = "Aktuelle Menge";

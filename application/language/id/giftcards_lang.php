@@ -2,7 +2,6 @@
 
 $lang["giftcards_add_minus"] = "Penyesuaian Inventori TAMBAH / KURANG (-)";
 $lang["giftcards_allow_alt_description"] = "Deskripsi Alternatif dimungkinkan";
-$lang["giftcards_amazon"] = "Amazon";
 $lang["giftcards_bulk_edit"] = "Ubah Massal";
 $lang["giftcards_cannot_be_deleted"] = "Tidak dapat menghapus GiftCard terpilih, Satu atau lebih GiftCard yang dipilih memiliki Penjualan.";
 $lang["giftcards_cannot_find_giftcard"] = "Informasi GiftCard tidak ditemukan";
@@ -15,6 +14,7 @@ $lang["giftcards_change_all_to_serialized"] = "Ubah semua menggunakan nomor seri
 $lang["giftcards_change_all_to_unserialized"] = "Ubah semua tanpa nomor serial";
 $lang["giftcards_confirm_bulk_edit"] = "Apakah Anda yakin ingin merubah semua GiftCard yang dipilih?";
 $lang["giftcards_confirm_delete"] = "Apakah anda yakin ingin menghapus GiftCard yang dipilih?";
+$lang["giftcards_confirm_restore"] = "";
 $lang["giftcards_cost_price"] = "Harga Pokok";
 $lang["giftcards_count"] = "Mutasi/Penyesuaian Inventori";
 $lang["giftcards_current_quantity"] = "Jumlah saat ini";

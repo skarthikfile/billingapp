@@ -37,7 +37,6 @@ class Barcode_lib
 		$data['barcode_font_size'] = $this->CI->config->item('barcode_font_size');
 		$data['barcode_height'] = $this->CI->config->item('barcode_height');
 		$data['barcode_width'] = $this->CI->config->item('barcode_width');
-		$data['barcode_quality'] = $this->CI->config->item('barcode_quality');
 		$data['barcode_first_row'] = $this->CI->config->item('barcode_first_row');
 		$data['barcode_second_row'] = $this->CI->config->item('barcode_second_row');
 		$data['barcode_third_row'] = $this->CI->config->item('barcode_third_row');
@@ -80,6 +79,7 @@ class Barcode_lib
 	{
 		$barcode_type = $this->CI->config->item('barcode_type');
 		$barcode_instance = $this->get_barcode_instance($barcode_type);
+
 		return $barcode_instance->validate($barcode);
 	}
 
@@ -89,7 +89,7 @@ class Barcode_lib
 		$is_valid = empty($item['item_number']) && $barcode_config['barcode_generate_if_empty'] || $barcode_instance->validate($item['item_number']);
 
 		// if barcode validation does not succeed,
-		if (!$is_valid)
+		if(!$is_valid)
 		{
 			$barcode_instance = Barcode_lib::get_barcode_instance();
 		}
@@ -126,13 +126,13 @@ class Barcode_lib
 	{
 		$seed = $barcode_config['barcode_content'] !== "id" && !empty($item['item_number']) ? $item['item_number'] : $item['item_id'];
 
-		if( $barcode_config['barcode_content'] !== "id" && !empty($item['item_number']))
+		if($barcode_config['barcode_content'] !== "id" && !empty($item['item_number']))
 		{
 			$seed = $item['item_number'];
 		}
 		else
 		{
-			if ($barcode_config['barcode_generate_if_empty'])
+			if($barcode_config['barcode_generate_if_empty'])
 			{
 				// generate barcode with the correct instance
 				$seed = $barcode_instance->generate($seed);
@@ -150,7 +150,6 @@ class Barcode_lib
 		try
 		{
 			$barcode_instance = Barcode_lib::barcode_instance($item, $barcode_config);
-			$barcode_instance->setQuality($barcode_config['barcode_quality']);
 			$barcode_instance->setDimensions($barcode_config['barcode_width'], $barcode_config['barcode_height']);
 
 			$barcode_instance->draw();
@@ -173,11 +172,8 @@ class Barcode_lib
 			// set the receipt number to generate the barcode for
 			$barcode->setData($barcode_content);
 
-			// image quality 100
-			$barcode->setQuality(100);
-
-			// width: 200, height: 30
-			$barcode->setDimensions(200, 30);
+			// width: 300, height: 50
+			$barcode->setDimensions(300, 50);
 
 			// draw the image
 			$barcode->draw();
@@ -239,9 +235,9 @@ class Barcode_lib
 	{
 		$array = array();
 
-		if (($handle = opendir($folder)) !== FALSE)
+		if(($handle = opendir($folder)) !== FALSE)
 		{
-			while (($file = readdir($handle)) !== FALSE)
+			while(($file = readdir($handle)) !== FALSE)
 			{
 				if(substr($file, -4, 4) === '.ttf')
 				{

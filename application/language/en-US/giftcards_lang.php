@@ -2,7 +2,6 @@
 
 $lang["giftcards_add_minus"] = "Inventory to add or subtract.";
 $lang["giftcards_allow_alt_description"] = "Allow Alternate Description";
-$lang["giftcards_amazon"] = "Amazon";
 $lang["giftcards_bulk_edit"] = "Bulk Edit";
 $lang["giftcards_cannot_be_deleted"] = "Could not delete selected Gift Card(s), one or more of the selected Gift Cards has sales.";
 $lang["giftcards_cannot_find_giftcard"] = "Gift Card not found.";
@@ -15,6 +14,7 @@ $lang["giftcards_change_all_to_serialized"] = "Change All To Serialized";
 $lang["giftcards_change_all_to_unserialized"] = "Change All To Unserialized";
 $lang["giftcards_confirm_bulk_edit"] = "Are you sure you want to edit the selected Gift Card(s)?";
 $lang["giftcards_confirm_delete"] = "Are you sure you want to delete the selected Gift Card(s)?";
+$lang["giftcards_confirm_restore"] = "Are you sure you want to restore selected Gift Card(s)?";
 $lang["giftcards_cost_price"] = "Wholesale Price";
 $lang["giftcards_count"] = "Update Inventory";
 $lang["giftcards_current_quantity"] = "Current Quantity";

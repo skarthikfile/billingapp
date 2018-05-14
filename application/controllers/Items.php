@@ -63,7 +63,7 @@ class Items extends Secure_Controller
 		$data_rows = array();
 		foreach($items->result() as $item)
 		{
-			$data_rows[] = $this->xss_clean(get_item_data_row($item, $this));
+			$data_rows[] = $this->xss_clean(get_item_data_row($item));
 			if($item->pic_filename!='')
 			{
 				$this->_update_pic_filename($item);
@@ -169,7 +169,7 @@ class Items extends Secure_Controller
 		$result = array();
 		foreach($item_infos->result() as $item_info)
 		{
-			$result[$item_info->item_id] = $this->xss_clean(get_item_data_row($item_info, $this));
+			$result[$item_info->item_id] = $this->xss_clean(get_item_data_row($item_info));
 		}
 
 		echo json_encode($result);
@@ -369,8 +369,8 @@ class Items extends Secure_Controller
 			'name' => $this->input->post('name'),
 			'description' => $this->input->post('description'),
 			'category' => $this->input->post('category'),
-			'item_type' => $this->input->post('item_type'),
-			'stock_type' => $this->input->post('stock_type'),
+			'item_type' => $this->input->post('item_type') == NULL ? ITEM : $this->input->post('item_type'),
+			'stock_type' => $this->input->post('stock_type') == NULL ? HAS_STOCK : $this->input->post('stock_type'),
 			'supplier_id' => $this->input->post('supplier_id') == '' ? NULL : $this->input->post('supplier_id'),
 			'item_number' => $this->input->post('item_number') == '' ? NULL : $this->input->post('item_number'),
 			'cost_price' => parse_decimals($this->input->post('cost_price')),
@@ -478,7 +478,7 @@ class Items extends Secure_Controller
 				echo json_encode(array('success' => FALSE, 'message' => $message, 'id' => $item_id));
 			}
 		}
-		else//failure
+		else // failure
 		{
 			$message = $this->xss_clean($this->lang->line('items_error_adding_updating') . ' ' . $item_data['name']);
 			
@@ -497,7 +497,7 @@ class Items extends Secure_Controller
 	*/
 	public function check_kit_exists()
 	{
-		if ($this->input->post('item_number') === -1)
+		if($this->input->post('item_number') === -1)
 		{
 			$exists = $this->Item_kit->item_kit_exists_for_name($this->input->post('name'));
 		}
@@ -702,7 +702,8 @@ class Items extends Secure_Controller
 						  needs further discussion  */
 
 						$pic_file = $data[24];
-						/*if(strcmp('.htaccess', $pic_file)==0) {
+						/*if(strcmp('.htaccess', $pic_file)==0)
+						{
 							$pic_file='';
 						}*/
 						$item_data['pic_filename'] = $pic_file;
@@ -750,7 +751,7 @@ class Items extends Secure_Controller
 
 						// array to store information if location got a quantity
 						$allowed_locations = $this->Stock_location->get_allowed_locations();
-						for ($col = 25; $col < $cols; $col = $col + 2)
+						for($col = 25; $col < $cols; $col = $col + 2)
 						{
 							$location_id = $data[$col];
 							if(array_key_exists($location_id, $allowed_locations))
@@ -835,19 +836,20 @@ class Items extends Secure_Controller
 	private function _update_pic_filename($item)
 	{
 		$filename = pathinfo($item->pic_filename, PATHINFO_FILENAME);
-		if($filename=='')
+
+		// if the field is empty there's nothing to check
+		if(!empty($filename))
 		{
-			// if the field is empty there's nothing to check
-			return;
-		}
-		
-		$ext = pathinfo($item->pic_filename, PATHINFO_EXTENSION);
-		if ($ext == '') {
-			$images = glob('./uploads/item_pics/' . $item->pic_filename . '.*');
-			if (sizeof($images) > 0) {
-				$new_pic_filename = pathinfo($images[0], PATHINFO_BASENAME);
-				$item_data = array('pic_filename' => $new_pic_filename);
-				$this->Item->save($item_data, $item->item_id);
+			$ext = pathinfo($item->pic_filename, PATHINFO_EXTENSION);
+			if(empty($ext))
+			{
+				$images = glob('./uploads/item_pics/' . $item->pic_filename . '.*');
+				if(sizeof($images) > 0)
+				{
+					$new_pic_filename = pathinfo($images[0], PATHINFO_BASENAME);
+					$item_data = array('pic_filename' => $new_pic_filename);
+					$this->Item->save($item_data, $item->item_id);
+				}
 			}
 		}
 	}

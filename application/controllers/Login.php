@@ -25,26 +25,6 @@ class Login extends CI_Controller
 			}
 			else
 			{
-				if($this->config->item('statistics'))
-				{
-					$this->load->library('tracking_lib');
-
-					$this->tracking_lib->track_page('login', 'login');
-
-					$this->tracking_lib->track_event('Stats', 'Theme', $this->config->item('theme'));
-					$this->tracking_lib->track_event('Stats', 'Language', $this->config->item('language'));
-					$this->tracking_lib->track_event('Stats', 'Timezone', $this->config->item('timezone'));
-					$this->tracking_lib->track_event('Stats', 'Currency', $this->config->item('currency_symbol'));
-					$this->tracking_lib->track_event('Stats', 'Customer Sales Tax Support', $this->config->item('customer_sales_tax_support'));
-					$this->tracking_lib->track_event('Stats', 'Tax Included', $this->config->item('tax_included'));
-					$this->tracking_lib->track_event('Stats', 'Thousands Separator', $this->config->item('thousands_separator'));
-					$this->tracking_lib->track_event('Stats', 'Currency Decimals', $this->config->item('currency_decimals'));
-					$this->tracking_lib->track_event('Stats', 'Tax Decimals', $this->config->item('tax_decimals'));
-					$this->tracking_lib->track_event('Stats', 'Quantity Decimals', $this->config->item('quantity_decimals'));
-					$this->tracking_lib->track_event('Stats', 'Invoice Enable', $this->config->item('invoice_enable'));
-					$this->tracking_lib->track_event('Stats', 'Date or Time Format', $this->config->item('date_or_time_format'));
-				}
-
 				redirect('home');
 			}
 		}
@@ -67,6 +47,10 @@ class Login extends CI_Controller
 
 			return FALSE;
 		}
+
+		// trigger any required upgrade before starting the application
+		$this->load->library('migration');
+		$this->migration->latest();
 
 		return TRUE;
 	}
@@ -98,7 +82,7 @@ class Login extends CI_Controller
 	{
 		// get PHP extensions and check that the required ones are installed
 		$extensions = implode(', ', get_loaded_extensions());
-		$keys = array('bcmath', 'intl', 'gd', 'sockets', 'mcrypt');
+		$keys = array('bcmath', 'intl', 'gd', 'openssl', 'mbstring', 'curl');
 		$pattern = '/';
 		foreach($keys as $key) 
 		{
@@ -112,10 +96,6 @@ class Login extends CI_Controller
 			error_log('Check your php.ini');
 			error_log('PHP installed extensions: ' . $extensions);
 			error_log('PHP required extensions: ' . implode(', ', $keys));
-		}
-		else
-		{
-			$result = preg_match('~\b(Copyright|(c)|©|All rights reserved|Developed|Crafted|Implemented|Made|Powered|Code|Design|unblockUI|blockUI|blockOverlay|hide|opacity)\b~i', file_get_contents(APPPATH . 'views/partial/footer.php')) != TRUE;
 		}
 
 		return $result;

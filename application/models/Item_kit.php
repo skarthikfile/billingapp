@@ -71,7 +71,7 @@ class Item_kit extends CI_Model
 		pic_filename,
 		allow_alt_description,
 		is_serialized,
-		deleted,
+		items.deleted,
 		custom1,
 		custom2,
 		custom3,
@@ -199,12 +199,26 @@ class Item_kit extends CI_Model
 		return $suggestions;
 	}
 
+ 	/*
+	Gets rows
+	*/
+	public function get_found_rows($search)
+	{
+		return $this->search($search, 0, 0, 'name', 'asc', TRUE);
+	}
+
 	/*
 	Perform a search on items
 	*/
-	public function search($search, $rows=0, $limit_from=0, $sort='name', $order='asc')
+	public function search($search, $rows = 0, $limit_from = 0, $sort = 'name', $order = 'asc', $count_only = FALSE)
 	{
-		$this->db->from('item_kits');
+		// get_found_rows case
+		if($count_only == TRUE)
+		{
+			$this->db->select('COUNT(item_kits.item_kit_id) as count');
+		}
+
+		$this->db->from('item_kits AS item_kits');
 		$this->db->like('name', $search);
 		$this->db->or_like('description', $search);
 
@@ -212,6 +226,12 @@ class Item_kit extends CI_Model
 		if(stripos($search, 'KIT ') !== FALSE)
 		{
 			$this->db->or_like('item_kit_id', str_ireplace('KIT ', '', $search));
+		}
+
+		// get_found_rows case
+		if($count_only == TRUE)
+		{
+			return $this->db->get()->row()->count;
 		}
 
 		$this->db->order_by($sort, $order);
@@ -222,21 +242,6 @@ class Item_kit extends CI_Model
 		}
 
 		return $this->db->get();
-	}
-
-	public function get_found_rows($search)
-	{
-		$this->db->from('item_kits');
-		$this->db->like('name', $search);
-		$this->db->or_like('description', $search);
-
-		//KIT #
-		if(stripos($search, 'KIT ') !== FALSE)
-		{
-			$this->db->or_like('item_kit_id', str_ireplace('KIT ', '', $search));
-		}
-
-		return $this->db->get()->num_rows();
 	}
 }
 ?>

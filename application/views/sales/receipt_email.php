@@ -1,3 +1,8 @@
+<?php 
+	// Temporarily loads the system language for _lang to print invoice in the system language rather than user defined.
+	load_language(TRUE,array('customers','sales','employees'));
+?>
+
 <div id="receipt_wrapper" style="width:100%;">
 	<div id="receipt_header" style="text-align:center;">
 		<?php
@@ -23,7 +28,7 @@
 		<div id="company_address"><?php echo nl2br($this->config->item('address')); ?></div>
 		<div id="company_phone"><?php echo $this->config->item('phone'); ?></div>
 		<br>
-		<div id="sale_receipt"><?php echo $receipt_title; ?></div>
+		<div id="sale_receipt"><?php echo $this->lang->line('sales_receipt'); ?></div>
 		<div id="sale_time"><?php echo $transaction_time ?></div>
 	</div>
 
@@ -55,47 +60,45 @@
 		<?php
 		foreach($cart as $line=>$item)
 		{
-		?>
-			<tr>
-				<td><?php echo ucfirst($item['name']); ?></td>
-				<td><?php echo to_currency($item['price']); ?></td>
-				<td><?php echo to_quantity_decimals($item['quantity']); ?></td>
-				<td style="text-align:right;"><?php echo to_currency($item[($this->config->item('receipt_show_total_discount') ? 'total' : 'discounted_total')]); ?></td>
-			</tr>
-			<tr>
-				<?php
-				if($this->config->item('receipt_show_description'))
-				{
-				?>
-					<td colspan="2"><?php echo $item['description']; ?></td>
-				<?php
-				}
-				?>
-				<?php
-				if($this->config->item('receipt_show_serialnumber'))
-				{
-				?>
-					<td><?php echo $item['serialnumber']; ?></td>
-				<?php
-				}
-				?>
-			</tr>
-			<?php
-			if($item['discount'] > 0)
+			if($item['print_option'] == PRINT_YES)
 			{
 			?>
 				<tr>
-					<td colspan="3" style="font-weight: bold;"><?php echo number_format($item['discount'], 0) . " " . $this->lang->line("sales_discount_included")?></td>
-					<td style="text-align:right;"><?php echo to_currency($item['discounted_total']) ; ?></td>
+					<td><?php echo ucfirst($item['name']); ?></td>
+					<td><?php echo to_currency($item['price']); ?></td>
+					<td><?php echo to_quantity_decimals($item['quantity']); ?></td>
+					<td style="text-align:right;"><?php echo to_currency($item[($this->config->item('receipt_show_total_discount') ? 'total' : 'discounted_total')]); ?></td>
 				</tr>
-			<?php
-			}
-			?>
-		<?php
-		}
-		?>
+				<tr>
+					<?php
+					if($this->config->item('receipt_show_description'))
+					{
+					?>
+						<td colspan="2"><?php echo $item['description']; ?></td>
+					<?php
+					}
 
-		<?php
+					if($this->config->item('receipt_show_serialnumber'))
+					{
+					?>
+						<td><?php echo $item['serialnumber']; ?></td>
+					<?php
+					}
+					?>
+				</tr>
+				<?php
+				if($item['discount'] > 0)
+				{
+				?>
+					<tr>
+						<td colspan="3" style="font-weight: bold;"><?php echo number_format($item['discount'], 0) . " " . $this->lang->line("sales_discount_included") ?></td>
+						<td style="text-align:right;"><?php echo to_currency($item['discounted_total']); ?></td>
+					</tr>
+				<?php
+				}
+			}
+		}
+
 		if($this->config->item('receipt_show_total_discount') && $discount > 0)
 		{
 		?>

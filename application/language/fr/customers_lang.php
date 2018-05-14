@@ -2,16 +2,21 @@
 
 $lang["customers_account_number"] = "# Compte";
 $lang["customers_account_number_duplicate"] = "Ce numéro de compte est déjà utilisé dans la base de données";
-$lang["customers_available_points"] = "";
+$lang["customers_available_points"] = "Points disponibles";
 $lang["customers_average"] = "";
 $lang["customers_avg_discount"] = "";
 $lang["customers_basic_information"] = "";
 $lang["customers_cannot_be_deleted"] = "Impossible de supprimer. Un ou plusiers client(s) sélectionné(s) ont des ventes.";
 $lang["customers_company_name"] = "Compagnie";
 $lang["customers_confirm_delete"] = "Etes vous sûr(e) de vouloir supprimer ces clients?";
+$lang["customers_confirm_restore"] = "";
+$lang["customers_consent"] = "";
+$lang["customers_consent_required"] = "";
 $lang["customers_customer"] = "Client";
+$lang["customers_date"] = "";
 $lang["customers_discount"] = "Rabais";
 $lang["customers_email_duplicate"] = "";
+$lang["customers_employee"] = "";
 $lang["customers_error_adding_updating"] = "Érreur lors de l'ajout/suppression de client";
 $lang["customers_excel_import_failed"] = "Echec Import d'Excel";
 $lang["customers_excel_import_nodata_wrongformat"] = "Le fichier envoyé ne contient aucune donnée ou elles sont dans un format erroné";

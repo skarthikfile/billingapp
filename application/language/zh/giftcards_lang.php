@@ -2,7 +2,6 @@
 
 $lang["giftcards_add_minus"] = "加/減庫存";
 $lang["giftcards_allow_alt_description"] = "允許使用ALT描述";
-$lang["giftcards_amazon"] = "Amazon";
 $lang["giftcards_bulk_edit"] = "批量編輯";
 $lang["giftcards_cannot_be_deleted"] = "無法刪除選定的禮金券，一個或多個所選擇的禮金券已經使用。";
 $lang["giftcards_cannot_find_giftcard"] = "找不到禮金券的訊息";
@@ -15,6 +14,7 @@ $lang["giftcards_change_all_to_serialized"] = "全部更改序號至序列化";
 $lang["giftcards_change_all_to_unserialized"] = "全部更改序號至非序列化";
 $lang["giftcards_confirm_bulk_edit"] = "您確定您要編輯的所有選擇的禮金券嗎？";
 $lang["giftcards_confirm_delete"] = "你確定你要刪除選定的禮金券?";
+$lang["giftcards_confirm_restore"] = "";
 $lang["giftcards_cost_price"] = "成本價格";
 $lang["giftcards_count"] = "更新庫存";
 $lang["giftcards_current_quantity"] = "當前數量";

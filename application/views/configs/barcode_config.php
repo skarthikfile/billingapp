@@ -12,20 +12,6 @@
 			</div>
 
 			<div class="form-group form-group-sm">
-				<?php echo form_label($this->lang->line('config_barcode_quality'), 'barcode_quality', array('class' => 'control-label col-xs-2 required')); ?>
-				<div class='col-xs-2'>
-					<?php echo form_input(array(
-						'max' => '100',
-						'min' => '10',
-						'type' => 'number',
-						'name' => 'barcode_quality',
-						'id' => 'barcode_quality',
-						'class' => 'form-control input-sm required',
-						'value'=>$this->config->item('barcode_quality'))); ?>
-				</div>
-			</div>
-
-			<div class="form-group form-group-sm">
 				<?php echo form_label($this->lang->line('config_barcode_width'), 'barcode_width', array('class' => 'control-label col-xs-2 required')); ?>
 				<div class='col-xs-2'>
 					<?php echo form_input(array(
@@ -71,6 +57,21 @@
 						'id' => 'barcode_font_size',
 						'class' => 'form-control input-sm required',
 						'value'=>$this->config->item('barcode_font_size'))); ?>
+				</div>
+			</div>
+
+			<div class="form-group form-group-sm">
+				<?php echo form_label($this->lang->line('config_allow_duplicate_barcodes'), 'allow_duplicate_barcodes', array('class' => 'control-label col-xs-2')); ?>
+				<div class='col-xs-1'>
+					<?php echo form_checkbox(array(
+						'name' => 'allow_duplicate_barcodes',
+						'id' => 'allow_duplicate_barcodes',
+						'value' => 'allow_duplicate_barcodes',
+						'checked' => $this->config->item('allow_duplicate_barcodes'))); ?>
+					&nbsp
+					<label class="control-label">
+						<span class="glyphicon glyphicon-warning-sign" data-toggle="tooltip" data-placement="right" title="<?php echo $this->lang->line('config_barcode_tooltip'); ?>"></span>
+					</label>
 				</div>
 			</div>
 
@@ -203,9 +204,9 @@
 			</div>
 
 			<?php echo form_submit(array(
-				'name' => 'submit_form',
-				'id' => 'submit_form',
-				'value'=>$this->lang->line('common_submit'),
+				'name' => 'submit_barcode',
+				'id' => 'submit_barcode',
+				'value' => $this->lang->line('common_submit'),
 				'class' => 'btn btn-primary btn-sm pull-right')); ?>
 		</fieldset>
 	</div>
@@ -226,11 +227,6 @@ $(document).ready(function()
 				number:true
 			},
 			barcode_height:
-			{
-				required:true,
-				number:true
-			},
-			barcode_quality:
 			{
 				required:true,
 				number:true
@@ -268,11 +264,6 @@ $(document).ready(function()
 			{
 				required:"<?php echo $this->lang->line('config_default_barcode_height_required'); ?>",
 				number:"<?php echo $this->lang->line('config_default_barcode_height_number'); ?>"
-			},
-			barcode_quality:
-			{
-				required:"<?php echo $this->lang->line('config_default_barcode_quality_required'); ?>",
-				number:"<?php echo $this->lang->line('config_default_barcode_quality_number'); ?>"
 			},
 			barcode_font_size:
 			{

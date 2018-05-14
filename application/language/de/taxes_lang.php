@@ -1,7 +1,8 @@
 <?php 
 
-$lang["taxes_add_exception"] = "";
+$lang["taxes_add_exception"] = "Ausnahme hinzufügen";
 $lang["taxes_confirm_delete"] = "";
+$lang["taxes_confirm_restore"] = "";
 $lang["taxes_default_tax_category"] = "";
 $lang["taxes_error_adding_updating"] = "";
 $lang["taxes_new"] = "";

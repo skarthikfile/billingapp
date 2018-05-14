@@ -25,8 +25,8 @@ class Stock_location extends CI_Model
 	public function get_undeleted_all($module_id = 'items')
 	{
 		$this->db->from('stock_locations');
-		$this->db->join('permissions', 'permissions.location_id = stock_locations.location_id');
-		$this->db->join('grants', 'grants.permission_id = permissions.permission_id');
+		$this->db->join('permissions AS permissions', 'permissions.location_id = stock_locations.location_id');
+		$this->db->join('grants AS grants', 'grants.permission_id = permissions.permission_id');
 		$this->db->where('person_id', $this->session->userdata('person_id'));
 		$this->db->like('permissions.permission_id', $module_id, 'after');
 		$this->db->where('deleted', 0);
@@ -61,12 +61,12 @@ class Stock_location extends CI_Model
 	public function is_allowed_location($location_id, $module_id = 'items')
 	{
 		$this->db->from('stock_locations');
-		$this->db->join('permissions', 'permissions.location_id = stock_locations.location_id');
-		$this->db->join('grants', 'grants.permission_id = permissions.permission_id');
+		$this->db->join('permissions AS permissions', 'permissions.location_id = stock_locations.location_id');
+		$this->db->join('grants AS grants', 'grants.permission_id = permissions.permission_id');
 		$this->db->where('person_id', $this->session->userdata('person_id'));
 		$this->db->like('permissions.permission_id', $module_id, 'after');
-		$this->db->where('deleted', 0);
 		$this->db->where('stock_locations.location_id', $location_id);
+		$this->db->where('deleted', 0);
 
 		return ($this->db->get()->num_rows() == 1);
 	}
@@ -74,8 +74,8 @@ class Stock_location extends CI_Model
 	public function get_default_location_id()
 	{
 		$this->db->from('stock_locations');
-		$this->db->join('permissions', 'permissions.location_id = stock_locations.location_id');
-		$this->db->join('grants', 'grants.permission_id = permissions.permission_id');
+		$this->db->join('permissions AS permissions', 'permissions.location_id = stock_locations.location_id');
+		$this->db->join('grants AS grants', 'grants.permission_id = permissions.permission_id');
 		$this->db->where('person_id', $this->session->userdata('person_id'));
 		$this->db->where('deleted', 0);
 		$this->db->limit(1);
@@ -89,6 +89,14 @@ class Stock_location extends CI_Model
 		$this->db->where('location_id', $location_id);
 
 		return $this->db->get()->row()->location_name;
+	}
+
+	public function get_location_id($location_name)
+	{
+		$this->db->from('stock_locations');
+		$this->db->where('location_name', $location_name);
+
+		return $this->db->get()->row()->location_id;
 	}
 
 	public function save(&$location_data, $location_id)
@@ -121,6 +129,18 @@ class Stock_location extends CI_Model
 			return $this->db->trans_status();
    		}
 
+   		$original_location_name = $this->get_location_name($location_id);
+
+		if($original_location_name != $location_name)
+		{
+			$this->db->where('location_id', $location_id);
+			$this->db->delete('permissions');
+
+			$this->_insert_new_permission('items', $location_id, $location_name);
+			$this->_insert_new_permission('sales', $location_id, $location_name);
+			$this->_insert_new_permission('receivings', $location_id, $location_name);
+		}
+
 		$this->db->where('location_id', $location_id);
 
 		return $this->db->update('stock_locations', $location_data_to_save);
@@ -137,7 +157,10 @@ class Stock_location extends CI_Model
 		$employees = $this->Employee->get_all();
 		foreach($employees->result_array() as $employee)
 		{
-			$grants_data = array('permission_id' => $permission_id, 'person_id' => $employee['person_id']);
+			// Retrieve the menu_group assigned to the grant for the module and use that for the new stock locations
+			$menu_group = $this->Employee->get_menu_group($module, $employee['person_id']);
+
+			$grants_data = array('permission_id' => $permission_id, 'person_id' => $employee['person_id'], 'menu_group' => $menu_group);
 			$this->db->insert('grants', $grants_data);
 		}
 	}

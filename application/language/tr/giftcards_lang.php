@@ -2,7 +2,6 @@
 
 $lang["giftcards_add_minus"] = "Eklenen/Çıkarılan Adet";
 $lang["giftcards_allow_alt_description"] = "Dip Nota izin ver";
-$lang["giftcards_amazon"] = "Amazon";
 $lang["giftcards_bulk_edit"] = "Çoklu Düzenleme";
 $lang["giftcards_cannot_be_deleted"] = "Seçili Hediye Çekleri silinemedi, bir veya fazla Hediye Çekinde satış bulunmaktadır.";
 $lang["giftcards_cannot_find_giftcard"] = "Hediye Çekine ait bilgi bulunamadı";
@@ -15,6 +14,7 @@ $lang["giftcards_change_all_to_serialized"] = "Tümünü seri numaralı yap";
 $lang["giftcards_change_all_to_unserialized"] = "Tümünü seri numarasız yap";
 $lang["giftcards_confirm_bulk_edit"] = "Seçili Hediye Çeklerini düzeltmek istiyormusunuz?";
 $lang["giftcards_confirm_delete"] = "Seçili Hediye Çeklerini silmek istediğinizden eminmisiniz?";
+$lang["giftcards_confirm_restore"] = "";
 $lang["giftcards_cost_price"] = "Maliyet Fiyatı";
 $lang["giftcards_count"] = "Stoğu Güncelle";
 $lang["giftcards_current_quantity"] = "Mevcut Miktar";

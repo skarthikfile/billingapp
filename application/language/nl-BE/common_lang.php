@@ -1,5 +1,4 @@
-<?php 
-
+<?php
 $lang["common_address_1"] = "Adres 1";
 $lang["common_address_2"] = "Adres 2";
 $lang["common_city"] = "Stad";
@@ -36,12 +35,12 @@ $lang["common_inv"] = "stock";
 $lang["common_last_name"] = "Achternaam";
 $lang["common_last_name_required"] = "De achternaam moet ingevuld worden.";
 $lang["common_last_page"] = "Laatste";
-$lang["common_learn_about_project"] = "om de laatste informatie te verkrijgen over het project";
+$lang["common_learn_about_project"] = "om de laatste informatie te verkrijgen over het project.";
 $lang["common_list_of"] = "Lijst van";
 $lang["common_logout"] = "Logout";
 $lang["common_new"] = "Nieuw";
-$lang["common_no_persons_to_display"] = "Er werden geen personen gevonden";
-$lang["common_none_selected_text"] = "Geen selectie";
+$lang["common_no_persons_to_display"] = "Er werden geen personen gevonden.";
+$lang["common_none_selected_text"] = "Geen selectie.";
 $lang["common_or"] = "Of";
 $lang["common_phone_number"] = "Telefoon";
 $lang["common_phone_number_required"] = "";
@@ -51,14 +50,15 @@ $lang["common_price"] = "Prijs";
 $lang["common_print"] = "Print";
 $lang["common_remove"] = "Verwijder";
 $lang["common_required"] = "Vereist";
+$lang["common_restore"] = "Herstel";
 $lang["common_return_policy"] = "Retourvoorwaarden";
 $lang["common_search"] = "Zoek";
 $lang["common_search_options"] = "Zoek criteria";
 $lang["common_searched_for"] = "Gezocht op";
 $lang["common_state"] = "Provincie";
 $lang["common_submit"] = "Verzend";
-$lang["common_total_spent"] = "";
-$lang["common_unknown"] = "";
+$lang["common_total_spent"] = "Totaal uitgegeven";
+$lang["common_unknown"] = "Onbekend";
 $lang["common_view_recent_sales"] = "Bekijk recente verkoop";
 $lang["common_website"] = "website";
 $lang["common_welcome"] = "Welkom";

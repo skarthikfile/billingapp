@@ -14,9 +14,11 @@ class Item_kits extends Secure_Controller
 	*/
 	private function _add_totals_to_item_kit($item_kit)
 	{
+		$kit_item_info = $this->Item->get_info($item_kit->item_id);
+
 		$item_kit->total_cost_price = 0;
-		$item_kit->total_unit_price = 0;
-		
+		$item_kit->total_unit_price = $kit_item_info->unit_price;
+
 		foreach($this->Item_kit_items->get_info($item_kit->item_kit_id) as $item_kit_item)
 		{
 			$item_info = $this->Item->get_info($item_kit_item['item_id']);
@@ -24,10 +26,17 @@ class Item_kits extends Secure_Controller
 			{
 				$item_info->$property = $this->xss_clean($value);
 			}
-			
+
 			$item_kit->total_cost_price += $item_info->cost_price * $item_kit_item['quantity'];
-			$item_kit->total_unit_price += $item_info->unit_price * $item_kit_item['quantity'];
+
+			if($item_kit->price_option == PRICE_OPTION_ALL || ($item_kit->price_option == PRICE_OPTION_KIT_STOCK && $item_info->stock_type == HAS_STOCK ))
+			{
+				$item_kit->total_unit_price += $item_info->unit_price * $item_kit_item['quantity'];
+			}
 		}
+
+		$discount_fraction = bcdiv($item_kit->kit_discount_percent, 100);
+		$item_kit->total_unit_price = $item_kit->total_unit_price - round(bcmul($item_kit->total_unit_price, $discount_fraction), totals_decimals(), PHP_ROUND_HALF_UP);
 
 		return $item_kit;
 	}
@@ -58,10 +67,8 @@ class Item_kits extends Secure_Controller
 		{
 			// calculate the total cost and retail price of the Kit so it can be printed out in the manage table
 			$item_kit = $this->_add_totals_to_item_kit($item_kit);
-			$data_rows[] = get_item_kit_data_row($item_kit, $this);
+			$data_rows[] = $this->xss_clean(get_item_kit_data_row($item_kit));
 		}
-
-		$data_rows = $this->xss_clean($data_rows);
 
 		echo json_encode(array('total' => $total_rows, 'rows' => $data_rows));
 	}
@@ -77,8 +84,8 @@ class Item_kits extends Secure_Controller
 	{
 		// calculate the total cost and retail price of the Kit so it can be added to the table refresh
 		$item_kit = $this->_add_totals_to_item_kit($this->Item_kit->get_info($row_id));
-		
-		echo json_encode(get_item_kit_data_row($item_kit, $this));
+
+		echo json_encode(get_item_kit_data_row($item_kit));
 	}
 	
 	public function view($item_kit_id = -1)
@@ -133,7 +140,7 @@ class Item_kits extends Secure_Controller
 			$success = TRUE;
 			$new_item = FALSE;
 			//New item kit
-			if ($item_kit_id == -1)
+			if($item_kit_id == -1)
 			{
 				$item_kit_id = $item_kit_data['item_kit_id'];
 				$new_item = TRUE;

@@ -17,7 +17,6 @@ class Tax_lib
 	public function __construct()
 	{
 		$this->CI =& get_instance();
-		$this->CI->load->library('sale_lib');
 	}
 
 	public function get_tax_types()
@@ -137,7 +136,7 @@ class Tax_lib
 			$rounding_code = $sales_tax['rounding_code'];
 			$rounded_sale_tax_amount = $sale_tax_amount;
 
-			if ($rounding_code == Rounding_mode::HALF_UP)
+			if($rounding_code == Rounding_mode::HALF_UP)
 			{
 				$rounded_sale_tax_amount = round($sale_tax_amount, $decimals, PHP_ROUND_HALF_UP);
 			}

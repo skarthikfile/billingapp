@@ -6,7 +6,7 @@ class Secure_Controller extends CI_Controller
 	* Controllers that are considered secure extend Secure_Controller, optionally a $module_id can
 	* be set to also check if a user can access a particular module in the system.
 	*/
-	public function __construct($module_id = NULL, $submodule_id = NULL)
+	public function __construct($module_id = NULL, $submodule_id = NULL, $menu_group = NULL)
 	{
 		parent::__construct();
 		
@@ -18,8 +18,6 @@ class Secure_Controller extends CI_Controller
 			redirect('login');
 		}
 
-		$this->track_page($module_id, $module_id);
-
 		$logged_in_employee_info = $model->get_logged_in_employee_info();
 		if(!$model->has_module_grant($module_id, $logged_in_employee_info->person_id) || 
 			(isset($submodule_id) && !$model->has_module_grant($submodule_id, $logged_in_employee_info->person_id)))
@@ -28,7 +26,31 @@ class Secure_Controller extends CI_Controller
 		}
 
 		// load up global data visible to all the loaded views
-		$data['allowed_modules'] = $this->Module->get_allowed_modules($logged_in_employee_info->person_id);
+
+		$this->load->library('session');
+		if($menu_group == NULL)
+		{
+			$menu_group = $this->session->userdata('menu_group');
+		}
+		else
+		{
+			$this->session->set_userdata('menu_group', $menu_group);
+		}
+
+		if($menu_group == 'home')
+		{
+			$allowed_modules = $this->Module->get_allowed_home_modules($logged_in_employee_info->person_id);
+		}
+		else
+		{
+			$allowed_modules = $this->Module->get_allowed_office_modules($logged_in_employee_info->person_id);
+		}
+
+		foreach($allowed_modules->result() as $module)
+		{
+			$data['allowed_modules'][] = $module;
+		}
+
 		$data['user_info'] = $logged_in_employee_info;
 		$data['controller_name'] = $module_id;
 
@@ -53,32 +75,6 @@ class Secure_Controller extends CI_Controller
 		}
 	}
 
-	protected function track_page($path, $page)
-	{
-		if(get_instance()->Appconfig->get('statistics'))
-		{
-			$this->load->library('tracking_lib');
-
-			if(empty($path))
-			{
-				$path = 'home';
-				$page = 'home';
-			}
-
-			$this->tracking_lib->track_page('controller/' . $path, $page);
-		}
-	}
-
-	protected function track_event($category, $action, $label, $value = NULL)
-	{
-		if(get_instance()->Appconfig->get('statistics'))
-		{
-			$this->load->library('tracking_lib');
-
-			$this->tracking_lib->track_event($category, $action, $label, $value);
-		}
-	}
-
 	public function numeric($str)
 	{
 		return parse_decimals($str);
@@ -90,12 +86,11 @@ class Secure_Controller extends CI_Controller
 
 		foreach($this->input->get() as $str)
 		{
-			$result = parse_decimals($str);
+			$result &= parse_decimals($str);
 		}
 
 		echo $result !== FALSE ? 'true' : 'false';
 	}
-
 
 	// this is the basic set of methods most OSPOS Controllers will implement
 	public function index() { return FALSE; }
@@ -104,6 +99,5 @@ class Secure_Controller extends CI_Controller
 	public function view($data_item_id = -1) { return FALSE; }
 	public function save($data_item_id = -1) { return FALSE; }
 	public function delete() { return FALSE; }
-
 }
 ?>

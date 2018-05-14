@@ -37,10 +37,8 @@ class Taxes extends Secure_Controller
 		$data_rows = array();
 		foreach($tax_codes->result() as $tax_code_row)
 		{
-			$data_rows[] = get_tax_data_row($tax_code_row, $this);
+			$data_rows[] = $this->xss_clean(get_tax_data_row($tax_code_row));
 		}
-
-		$data_rows = $this->xss_clean($data_rows);
 
 		echo json_encode(array('total' => $total_rows, 'rows' => $data_rows));
 	}
@@ -85,7 +83,7 @@ class Taxes extends Secure_Controller
 		$data['rounding_options'] = Rounding_mode::get_rounding_options();
 		$data['html_rounding_options'] = $this->get_html_rounding_options();
 
-		if ($tax_code == -1)
+		if($tax_code == -1)
 		{
 			$data['tax_code'] = '';
 			$data['tax_code_name'] = '';
@@ -172,7 +170,7 @@ class Taxes extends Secure_Controller
 				}
 			}
 
-			if (!empty($tax_code_rate_exceptions))
+			if(!empty($tax_code_rate_exceptions))
 			{
 				$success = $this->Tax->save_tax_rate_exceptions($tax_code_rate_exceptions, $entered_tax_code);
 			}
